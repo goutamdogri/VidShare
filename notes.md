@@ -6,11 +6,12 @@
 4. IP adress 0.0.0.0/0 - matlab sara ip address allowed hai to get response from our server. it is dengerous for production don't do it.
 5. must remove last '/' from mongodb url
 6. monodb ka password mai special character problem karta hai issiliye only alphabet and number ka combination banana
-7. ** Database se jab bhi bat karo to error ane ka possibility rahta hai isiliye "try-catch" mai nahi to "promises" ke sath use karna compulsory hai
-8. ** database se baat karne mai time lagta hai. isiliye "async" and "await" lagana compulsory hai
+7. \*\* Database se jab bhi bat karo to error ane ka possibility rahta hai isiliye "try-catch" mai nahi to "promises" ke sath use karna compulsory hai
+8. \*\* database se baat karne mai time lagta hai. isiliye "async" and "await" lagana compulsory hai
 9. dotenv - iss ko as early as possible import and configure ho jana chahiye humara application mai. taki jaldi se iska acces sab files ko mil jaye. isiliye isko main or first executed file mahi import and configure karwa diya jata hai.
 10. dotenv ko as "import" import karneke liye "-r dotenv/config --experimental-json-modules" command line mai run karne time likhna padega. yeh bata raha hai experimental basis pe hum run kar rahe hai
 11. ERROR - jabhi error handle kar rahe ho to log pe aisa custom message do taki jaldi se problem area pe pounch pao.
+12. middleware - requst milna aur uss request ke basis pe response send karne ke liye operation / code execution start karne ke middle mai jo code or package use kara jata usko middleware bolte hai.
 
 ## Steps
 
@@ -26,3 +27,7 @@
 10. mongoose express dotenv install
 11. connect with mongodb database in "src/db/index.js"
 12. "dotenv" import and configure.
+13. set server at src/app.js and listen code at src/index.js
+14. cookie-parser cors - npm install
+15. configuration - in src/app.js cors, cookie-parser, json, url data handeling configuration, static folder config.
+16. 1st utility making -
