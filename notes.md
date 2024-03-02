@@ -12,6 +12,11 @@
 10. dotenv ko as "import" import karneke liye "-r dotenv/config --experimental-json-modules" command line mai run karne time likhna padega. yeh bata raha hai experimental basis pe hum run kar rahe hai
 11. ERROR - jabhi error handle kar rahe ho to log pe aisa custom message do taki jaldi se problem area pe pounch pao.
 12. middleware - requst milna aur uss request ke basis pe response send karne ke liye operation / code execution start karne ke middle mai jo code or package use kara jata usko middleware bolte hai.
+13. utility -
+14. jsonwebtoken / jwt - yeh ak bearer token hai. jo bhi token bhejega usko hum daata bhej denge or access de denge
+15. refresh token ka expiry time access token ka expiry time se jada hota hai generally
+16. access token ko database mai store nahi karenge but refresh token ko karenge
+17. token -
 
 ## Steps
 
@@ -30,4 +35,9 @@
 13. set server at src/app.js and listen code at src/index.js
 14. cookie-parser cors - npm install
 15. configuration - in src/app.js cors, cookie-parser, json, url data handeling configuration, static folder config.
-16. 1st utility making -
+16. utilities making - for apierror, apiresponse, asyncHandler
+17. model making - for user and video
+18. mongoose-aggregate-paginate-v2 - package to unleash real power of mongodb aggregation pipeline
+19. bcrypt / bcrypt.js - package to help hash password
+20. jsonwebtoken - based on cryptography algorithm package to protect secret data
+21. token making code written in model.
