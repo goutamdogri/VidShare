@@ -11,12 +11,14 @@
 9. dotenv - iss ko as early as possible import and configure ho jana chahiye humara application mai. taki jaldi se iska acces sab files ko mil jaye. isiliye isko main or first executed file mahi import and configure karwa diya jata hai.
 10. dotenv ko as "import" import karneke liye "-r dotenv/config --experimental-json-modules" command line mai run karne time likhna padega. yeh bata raha hai experimental basis pe hum run kar rahe hai
 11. ERROR - jabhi error handle kar rahe ho to log pe aisa custom message do taki jaldi se problem area pe pounch pao.
-12. middleware - requst milna aur uss request ke basis pe response send karne ke liye operation / code execution start karne ke middle mai jo code or package use kara jata usko middleware bolte hai.
+12. middleware - "kam karne se pahle mujhse milke jana". requst milna aur uss request ke basis pe response send karne ke liye operation / code execution start karne ke middle mai jo code or package use kara jata usko middleware bolte hai.
 13. utility -
 14. jsonwebtoken / jwt - yeh ak bearer token hai. jo bhi token bhejega usko hum daata bhej denge or access de denge
 15. refresh token ka expiry time access token ka expiry time se jada hota hai generally
 16. access token ko database mai store nahi karenge but refresh token ko karenge
 17. token -
+18. [cloudinary](https://cloudinary.com/) - we use this for file uploading in cloud
+19. multer - file handeling - first get file from user and save in server temporarily. and then in next step upload this file in cloud.
 
 ## Steps
 
@@ -41,3 +43,4 @@
 19. bcrypt / bcrypt.js - package to help hash password
 20. jsonwebtoken - based on cryptography algorithm package to protect secret data
 21. token making code written in model.
+22. clodinary, multer config and file upload setup
