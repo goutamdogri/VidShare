@@ -19,4 +19,10 @@ app.use(express.static("public"))
 // configuration taki hum user ke coockies mai data securely store kar paye
 app.use(cookieParser())
 
+// routes
+import userRouter from './routes/user.routes.js'
+
+// routes declaration
+app.use('/api/v1/users', userRouter) //middleware use is must. "/api/v1/user" pe control userRouter pe chala jayega. "/api/v1/users" is prefix and userRouter's url is come after that. '/api/v1/users/register'. api and uska version as a route likhna standard practice hai. 
+
 export { app }

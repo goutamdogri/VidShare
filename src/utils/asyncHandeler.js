@@ -2,7 +2,7 @@
 // promise.resolve returns a promise whatever  the return value is. Thus maintain consistency.
 
 const asyncHandler = (requestHandeler) => {
-    (req, res, next) => {
+    return (req, res, next) => {
         Promise.resolve(requestHandeler(req, res, next)).catch((err) => next(err));
     }
 };
