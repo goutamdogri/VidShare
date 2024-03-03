@@ -59,3 +59,5 @@
 31. subscription model add
 32. user credentials, images update functionality add
 33. get channel profile and get watch history
+34. all user controller route making
+35. comment, like, playlist, tweet model making
