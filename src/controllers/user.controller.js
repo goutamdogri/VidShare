@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandeler.js";
 import {ApiError} from "../utils/ApiError.js"; 
 import {User} from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
-import {ApiResponse} from "../utils/ApiResponse"
+import {ApiResponse} from "../utils/ApiResponse.js"
 
 const registerUser = asyncHandler( async (req, res) => {
     // get user details from frontend
@@ -18,7 +18,7 @@ const registerUser = asyncHandler( async (req, res) => {
 
 
     const {fullName, email, username, password} = req.body
-    console.log("email: ", email);
+    // console.log("email: ", email);
 
     if(
         [fullName, email, username, password].some((field) => field?.trim() === "")
@@ -26,16 +26,23 @@ const registerUser = asyncHandler( async (req, res) => {
         throw new ApiError(400, "All fields are required")
     }
 
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [{ username }, { email }]
     })
     if (existedUser) {
         throw new ApiError(409, "user with email or username already exists")
     }
 
+    // console.log(req.files);
+
     // ".files" ka access multer middleware ne diya hai. name mai avatar diya hai isiliye ".avatar". 
     const avatarLocalPath = req.files?.avatar[0]?.path; // file path mil jayega jo humare server pe multer nai upload kiya hai. and yeh data humne return karaya hai multer function likhte time.
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    let coverImageLocalPath;
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path
+    }
 
     if(!avatarLocalPath){
         throw new ApiError(400, "Avatar file is required")
@@ -62,7 +69,7 @@ const registerUser = asyncHandler( async (req, res) => {
         "-password -refreshToken" // syntax hi aisa hai. iske andar jo field name rahega usko chodke sara select ho jayega
     )
 
-    if (!createdauser){
+    if (!createduser){
         throw new ApiError(500, "Something went wrong while registering the user")
     }
 

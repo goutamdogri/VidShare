@@ -51,7 +51,7 @@ const userSchema = new Schema({
  // "pre" is a hook middleware exists in mongoose. "save" event ka just pahle yeh code run hoga. idhar fat arrow function mat use karna qki uske andar "this" ka context nahi pata hota.
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
-    this.password = await bcrypt(this.password, 10)
+    this.password = await bcrypt.hash(this.password, 10)
     next()
 })
 
