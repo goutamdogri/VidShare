@@ -45,3 +45,4 @@
 21. token making code written in model.
 22. clodinary, multer config and file upload setup
 23. registering user - register route and its controller making.
+24. user register controller
