@@ -19,7 +19,7 @@
 17. token -
 18. [cloudinary](https://cloudinary.com/) - we use this for file uploading in cloud
 19. multer - file handeling - first get file from user and save in server temporarily. and then in next step upload this file in cloud.
-20. authentication - access token is short lived and used for authorizing the user. if it is expired user need to login again. refresh token is long lived and used for re-issuence of access token manually/programatically. so that user need not to login again and again. we give refresh and access token to user and save only refresh token in database.
+20. authentication - access token is short lived and used for authorizing the user. if it is expired user need to login again. refresh token is long lived and used for re-issuence of access token manually/programatically. whenever access token is expired (and user continuously used) it send 401 error we handle that error and using refresh token match we re-issue access token to user. so that user need not to login again and again. we give refresh and access token to user and save only refresh token in database.
 21. logout - logout karneke liye access token and refresh token ko har jagah se (user cookie, database) delete kar denge
 
 ## Steps
@@ -53,3 +53,4 @@
 27. login functionality set
 28. Authintication middleware setup
 29. logout functionality set
+30. refresh access token functionality set
