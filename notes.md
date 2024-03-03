@@ -22,6 +22,7 @@
 20. authentication - access token is short lived and used for authorizing the user. if it is expired user need to login again. refresh token is long lived and used for re-issuence of access token manually/programatically. whenever access token is expired (and user continuously used) it send 401 error we handle that error and using refresh token match we re-issue access token to user. so that user need not to login again and again. we give refresh and access token to user and save only refresh token in database.
 21. logout - logout karneke liye access token and refresh token ko har jagah se (user cookie, database) delete kar denge
 22. agar file update ke liye alak controller and alak endpoint rakhna recomended hai. nahi to sara user dubara save hoga - network congetion bohot bad jata hai.
+23. subscriber and subscription count - we set subscription model with field subscriber and channel to store data differently. here for each subscription of user made another document. so in each document there is one value of subscription and one value of channel. to calculate "channel's" subscriber count we find no. of document with "channel" name. To calculate "user's" subscription count we find no. of document with that "subscriber" name.
 
 ## Steps
 
@@ -57,3 +58,4 @@
 30. refresh access token functionality set
 31. subscription model add
 32. user credentials, images update functionality add
+33. get channel profile and get watch history
