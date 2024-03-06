@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 const app = express();
 
 //configurations
-// app.use this method is use for middleware and for configuration purpose. inhape hum cors ko configure kara kon kon port allowed hai ueh sab
+// app.use this method is use for middleware and for configuration purpose. inhape hum cors ko configure karenge kon kon port allowed hai yeh sab
 app.use(cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true
@@ -24,5 +24,15 @@ import userRouter from './routes/user.routes.js'
 
 // routes declaration
 app.use('/api/v1/users', userRouter) //middleware use is must. "/api/v1/user" pe control userRouter pe chala jayega. "/api/v1/users" is prefix and userRouter's url is come after that. '/api/v1/users/register'. api and uska version as a route likhna standard practice hai. 
+
+
+// TEST routes
+import routerForTest from './TEST/routesForTest.test.js'
+
+app.use('/api/v1/test', routerForTest)
+
+
+// TEST
+
 
 export { app }

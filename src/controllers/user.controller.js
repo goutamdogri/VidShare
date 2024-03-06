@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandeler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import { mongoose } from "mongoose";
@@ -100,7 +100,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
     // req body -> data
-    // username or login
+    // username or email
     // find the user
     // password check
     // access and referesh token
@@ -287,11 +287,12 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
     const avatar = await uploadOnCloudinary(avatarLocalPath);
 
-    // TODO: delete old image - assignment
-
     if (!avatar) {
         throw new ApiError(400, "Error while uploading on avatar");
     }
+
+    // TODO: delete old image - assignment
+    const deletePrevAvatar = await deleteFromCloudinary(req.user?.avatar)
 
     const user = await User.findByIdAndUpdate(
         req.user?._id,

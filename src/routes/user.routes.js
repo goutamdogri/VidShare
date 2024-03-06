@@ -20,7 +20,7 @@ const router = Router();
 router.route('/register').post(
     upload.fields([
         {
-            name: "avatar", // frontend mai bhi iska name avatar hona jorori hai
+            name: "avatar", // frontend mai bhi iska name (form mai input element ka name attribute) avatar hona jorori hai. 
             maxCount: 1
         },
         {

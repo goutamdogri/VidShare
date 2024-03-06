@@ -1,0 +1,4 @@
+1. how "try and catch" stop server from crash.
+2. exactly what comes in "request". and how exactly all middlwwares used in this project manupulate the "request" object. and It's flow in different routes.
+3. what is inside "next". how it works.
+4. .ststus, .cookie, .json etc. payload dene ke baad "response" object ke andar exactly kya hota hai?

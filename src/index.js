@@ -1,4 +1,4 @@
-// require('dotenv').configure({path: './env'}) // "require" code ka consistency ko kharap kar raha hai. packege.json mai bhi script mai dev command ko change karna parta hai tabhi run hota hai.
+// require('dotenv').configure({path: './env'}) // "require" code ka consistency ko kharap kar raha hai. packege.json mai bhi script mai dev key ka  command value ko change karna parta hai tabhi run hota hai.
 import dotenv from 'dotenv';
 import connectDB from './db/index.js';
 import { app } from './app.js';
@@ -9,7 +9,7 @@ dotenv.config({
 
 connectDB()
 .then(()=> {
-    app.on("errror", (error) => {
+    app.on("errror", (error) => { // event listner
         console.log("ERRR: ", error);
         throw error
     })
