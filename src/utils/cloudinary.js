@@ -29,8 +29,22 @@ const uploadOnCloudinary = async (localFilePath) => {
 const deleteFromCloudinary = async (cPath) => {
   try {
     if(!cPath) return null
-    const response = await cloudinary.uploader.destroy(cPath);
-    return response;
+    let startIndex = 0;
+    let endIndex = 0;
+    for (let i = cPath.length - 1; i >= 0; i--) {
+      if (cPath.charAt(i) === "." && endIndex === 0) {
+        endIndex = i;
+      } else if(cPath.charAt(i) === "/" && startIndex === 0) {
+        startIndex = i + 1;
+      }
+      if (startIndex !== 0 && endIndex !== 0) {
+        break;
+      }
+    }
+    let publicId = cPath.substring(startIndex, endIndex);
+
+    let result = await cloudinary.uploader.destroy(publicId)
+    return result
   } catch (error) {
     console.error("ERROR: ", error);
     throw error

@@ -33,10 +33,7 @@ const registerUser = asyncHandler(async (req, res) => {
     // remove password and refresh token field from response
     // check for user creation
     // return res
-
-    const { fullName, email, username, password } = req.body;
-    // console.log("email: ", email);
-
+    const { fullName, email, username, password } = req.body; // yeh form data parse multer middleware karke bheja hai.
     if (
         [fullName, email, username, password].some((field) => field?.trim() === "")
     ) {
@@ -49,8 +46,6 @@ const registerUser = asyncHandler(async (req, res) => {
     if (existedUser) {
         throw new ApiError(409, "user with email or username already exists");
     }
-
-    // console.log(req.files);
 
     // ".files" ka access multer middleware ne diya hai. name mai avatar diya hai isiliye ".avatar".
     const avatarLocalPath = req.files?.avatar[0]?.path; // file path mil jayega jo humare server pe multer nai upload kiya hai. and yeh data humne return karaya hai multer function likhte time.
@@ -127,9 +122,7 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Invalid user credential");
     }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
-        user._id
-    );
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id);
 
     // send token to secure cookie
     const loggedInUser = await User.findById(user._id).select(
@@ -183,7 +176,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
     const incomingRefreshToken =
-        req.cookies.refreshToken || req.body.refreshToken; // mobie se cookies body mai ate hai
+        req.cookies.refreshToken || req.body.refreshToken; // mobile se cookies body mai ate hai
 
     if (!incomingRefreshToken) {
         throw new ApiError(401, "unauthorized request");
@@ -195,7 +188,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             process.env.REFRESH_TOKEN_SECRET
         );
         const user = await User.findById(decodedToken?._id).select(
-            "-password -refreshToken"
+            "-password"
         );
 
         if (!user) {
@@ -234,7 +227,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 });
 
 const changeCurrentPassword = asyncHandler(async (req, res) => {
-    const { oldPassword, newPassword } = req.body;
+    const { oldPassword, newPassword } = req.body; // quki multer middleware use nahi kiya gya hai issiliye idhar form data parse nahi ho raha hai. so, body ke andar data nahi a raha hai. use body-parser or send json data from browser/postman
+
     const user = await User.findById(req.user?._id);
     const isPasswordValid = await user.isPasswordCorrect(oldPassword);
 
@@ -279,7 +273,8 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 })
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
-    const avatarLocalPath = req.files?.path; // file path mil jayega jo humare server pe multer nai upload kiya hai. and yeh data humne return karaya hai multer function likhte time.
+    console.log(req.file);
+    const avatarLocalPath = req.file?.path; // file path mil jayega jo humare server pe multer nai upload kiya hai. and yeh data humne return karaya hai multer function likhte time.
 
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar file is required");
@@ -292,7 +287,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     }
 
     // TODO: delete old image - assignment
-    const deletePrevAvatar = await deleteFromCloudinary(req.user?.avatar)
+    await deleteFromCloudinary(req.user?.avatar)
 
     const user = await User.findByIdAndUpdate(
         req.user?._id,
@@ -324,6 +319,9 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     if (!coverImage) {
         throw new ApiError(400, "Error while uploading on cover Image");
     }
+
+    // TODO: delete old image - assignment
+    await deleteFromCloudinary(req.user?.coverImage)
 
     const user = await User.findByIdAndUpdate(
         req.user?._id,
@@ -375,15 +373,15 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
             $addFields: {
                 subscribersCount: {
                     $size: "$subscribers"
+                },
+                ckannelSubscribedToCount: {
+                    $size: "$subscribedTo"
+                },
+                isSubscribed: {
+                    if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+                    then: true,
+                    else: false
                 }
-            },
-            ckannelSubscribedToCount: {
-                $size: "$subscribedTo"
-            },
-            isSubscribed: {
-                if: { $in: [req.user?._id, "$subscribers.subscriber"] },
-                then: true,
-                else: false
             }
         },
         {
@@ -413,7 +411,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     const user = await User.aggregate([
         {
             $match: {
-                _id: new mongoose.Types.ObjectId(req.user._id)
+                _id: new mongoose.Types.ObjectId(req.user._id) // req.user_id yeh ak string deta hai jo ki mongodb id nahi hai. see an mongodb id, unhape parenthesis ke andar jo string hai ohi req.user._id deta hai. mongoose behind the scene issko mongodb id mai convert kar deta hai. lekin aggregate ke andar aisa nahi hota, code directly jata hai, issiliye code ko mongodb id mai convert karneke liye yeh code likha gaya hai.
             }
         },
         {
@@ -422,16 +420,16 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                 localField: "watchHistory",
                 foreignField: "_id",
                 as: "watchHistory",
-                pipeline: [
+                pipeline: [ // ab hum videos ke andar pounch gaye hai
                     {
                         $lookup: {
                             from: "users",
                             localField: "owner",
                             foreignField: "_id",
                             as: "owner",
-                            pipeline: [
+                            pipeline: [ // ab hum nested wala owner ke andar pounch gaya
                                 {
-                                    $project: {
+                                    $project: { // nested wala owner ka field select kar rahe hai
                                         username: 1,
                                         fullName: 1,
                                         avatar: 1,

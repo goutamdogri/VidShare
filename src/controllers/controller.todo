@@ -2,3 +2,8 @@
 2. exactly what comes in "request". and how exactly all middlwwares used in this project manupulate the "request" object. and It's flow in different routes.
 3. what is inside "next". how it works.
 4. .ststus, .cookie, .json etc. payload dene ke baad "response" object ke andar exactly kya hota hai?
+
+flow of data.- res.cookie karnese cookie browser ke andar save ho jayega and req ke andar harbar cookie automatically browser se ayega. res.clearCookie karne se browser se cookie clear ho jayega verifyJWT ke through hum user ko req ke andar store karwa rahe hai. multer ke through form data parse hoke req mai body ke andar a raha hai. multer ke through files object bhi req ke andar a raha hai. agar body parser nahi use kiya to json data body ke andar ayega lekin formdata body ke andar nahi a payega.
+
+error - postman se form data pe data bhejne par error a raha hai jabki jason data bhejne for success ho raha hai. in change-password route. why?
+ans.- quki bodyparser use nahi kiya. multer bhi body parse karta hai. lekin usko file ke liye use kiya jata hai.

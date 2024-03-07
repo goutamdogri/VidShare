@@ -23,6 +23,7 @@
 21. logout - logout karneke liye access token and refresh token ko har jagah se (user cookie, database) delete kar denge
 22. agar file update ke liye alak controller and alak endpoint rakhna recomended hai. nahi to sara user dubara save hoga - network congetion bohot bad jata hai.
 23. subscriber and subscription count - we set subscription model with field subscriber and channel to store data differently. here for each subscription of user made another document. so in each document there is one value of subscription and one value of channel. to calculate "channel's" subscriber count we find no. of document with "channel" name. To calculate "user's" subscription count we find no. of document with that "subscriber" name.
+24. res.cookie karnese cookie browser ke andar save ho jayega and req ke andar harbar cookie automatically browser se ayega. res.clearCookie karne se browser se cookie clear ho jayega verifyJWT ke through hum user ko req ke andar store karwa rahe hai. multer ke through form data parse hoke req mai body ke andar a raha hai. multer ke through files object bhi req ke andar a raha hai.
 
 ## Steps
 

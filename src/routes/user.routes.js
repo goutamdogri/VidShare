@@ -17,7 +17,12 @@ import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-router.route('/register').post(
+function a (req,res, next) {
+    console.log(req);
+    next();
+}
+
+router.route('/register').post( 
     upload.fields([
         {
             name: "avatar", // frontend mai bhi iska name (form mai input element ka name attribute) avatar hona jorori hai. 
