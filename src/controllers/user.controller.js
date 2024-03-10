@@ -48,7 +48,13 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     // ".files" ka access multer middleware ne diya hai. name mai avatar diya hai isiliye ".avatar".
-    const avatarLocalPath = req.files?.avatar[0]?.path; // file path mil jayega jo humare server pe multer nai upload kiya hai. and yeh data humne return karaya hai multer function likhte time.
+
+    let avatarLocalPath;
+    if (req.files && Array.isArray(req.files.avatar) && req.files.avatar.length > 0) {
+        avatarLocalPath = req.files.avatar[0].path
+    }
+
+    // const avatarLocalPath = req.files?.avatar[0]?.path; // file path mil jayega jo humare server pe multer nai upload kiya hai. and yeh data humne return karaya hai multer function likhte time. "?" cannot understand it's behaviour
 
     // const coverImageLocalPath = req.files?.coverImage[0]?.path;
     let coverImageLocalPath;
@@ -73,8 +79,8 @@ const registerUser = asyncHandler(async (req, res) => {
 
     const user = await User.create({
         fullName, // fullName: fullName
-        avatar: avatar.url,
-        coverImage: coverImage?.url || "",
+        avatar: avatar.secure_url,
+        coverImage: coverImage?.secure_url || "",
         email,
         password,
         username: username.toLowerCase(),
@@ -273,7 +279,6 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 })
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
-    console.log(req.file);
     const avatarLocalPath = req.file?.path; // file path mil jayega jo humare server pe multer nai upload kiya hai. and yeh data humne return karaya hai multer function likhte time.
 
     if (!avatarLocalPath) {
@@ -286,7 +291,6 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Error while uploading on avatar");
     }
 
-    // TODO: delete old image - assignment
     await deleteFromCloudinary(req.user?.avatar)
 
     const user = await User.findByIdAndUpdate(
@@ -320,7 +324,6 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Error while uploading on cover Image");
     }
 
-    // TODO: delete old image - assignment
     await deleteFromCloudinary(req.user?.coverImage)
 
     const user = await User.findByIdAndUpdate(
