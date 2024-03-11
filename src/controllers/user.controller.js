@@ -300,7 +300,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
                 avatar: avatar.url,
             },
         },
-        { new: true }
+        { new: true } // so that findByIdAndUpdate returns the document after update
     ).select("-password -refreshToken")
 
     return res
