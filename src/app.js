@@ -24,12 +24,14 @@ import userRouter from './routes/user.routes.js'
 import videoRouter from './routes/video.routes.js'
 import playlistRouter from './routes/playlist.routes.js'
 import likeRouter from './routes/like.routes.js'
+import commentRouter from './routes/comment.routes.js'
 
 // routes declaration
 app.use('/api/v1/users', userRouter) //middleware use is must. "/api/v1/user" pe control userRouter pe chala jayega. "/api/v1/users" is prefix and userRouter's url is come after that. '/api/v1/users/register'. api and uska version as a route likhna standard practice hai. 
 app.use('/api/v1/videos', videoRouter)
 app.use('/api/v1/playlist', playlistRouter)
-app.use('/api/v1/like', likeRouter)
+app.use('/api/v1/likes', likeRouter)
+app.use('/api/v1/comments', commentRouter)
 
 // TEST routes
 import routerForTest from './TEST/routesForTest.test.js'
