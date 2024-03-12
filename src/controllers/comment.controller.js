@@ -2,18 +2,19 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js"
 import { asyncHandler } from "../utils/asyncHandeler.js";
 import { Comment } from "../models/comment.model.js";
+import { mongoose, isValidObjectId } from "mongoose";
 
 
-const getVideoComments = asyncHandler(async (req, res) => {
-    const {videoId} = req.params
+const getComments = asyncHandler(async (req, res) => {
+    const {videoORcommunityPost, videoIdOrCommunityPostId} = req.params
     const {page = 1, limit = 10} = req.query
 
-    if(!videoId) throw new ApiError(404, "videoId is neccessary")
-    
+    if((videoORcommunityPost !== 'video' && videoORcommunityPost !== "communityPost") || !videoIdOrCommunityPostId || !isValidObjectId(videoIdOrCommunityPostId)) throw new ApiError(404, "valid videoORcommunityPost and valid videoIdOrCommunityPostId is neccessary")
+
     const myAggregate = Comment.aggregate([
         {
             $match: {
-                video: videoId,
+                [videoORcommunityPost]: new mongoose.Types.ObjectId(videoIdOrCommunityPostId),
             }
         },
         {
@@ -45,7 +46,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
         page,
         limit,
         sort: {
-            createdAt: 1
+            createdAt: -1
         }
     }
 
@@ -71,15 +72,17 @@ const getVideoComments = asyncHandler(async (req, res) => {
 })
 
 const addComment = asyncHandler(async (req, res) => {
-    const {videoId} = req.params
+    const {videoORcommunityPost, videoIdOrCommunityPostId} = req.params
     const { content } = req.body
 
-    if(!videoId) throw new ApiError(404, "videoId is neccessary")
+    // we do not check whether provided videoId or communityId is valid means is there any video or community post with that id. restrict this id put from frontend or validate here
+
+    if((videoORcommunityPost !== 'video' && videoORcommunityPost !== "communityPost") || !videoIdOrCommunityPostId || !isValidObjectId(videoIdOrCommunityPostId)) throw new ApiError(404, "valid videoORcommunityPost and valid videoIdOrCommunityPostId is neccessary")
 
     if(content === undefined || content.trim() === "") throw new ApiError(404, "content can't be empty")
 
     const comment = await Comment.create({
-        video: videoId,
+        [videoORcommunityPost]: videoIdOrCommunityPostId,
         owner: req.user._id,
         content
     })
@@ -95,7 +98,7 @@ const updateComment = asyncHandler(async (req, res) => {
     const {commentId} = req.params
     const { content } = req.body
 
-    if(!commentId) throw new ApiError(404, "videoId is neccessary")
+    if(!commentId) throw new ApiError(404, "commentId is neccessary")
 
     if(content === undefined || content.trim() === "") throw new ApiError(404, "content can't be empty")
 
@@ -105,12 +108,14 @@ const updateComment = asyncHandler(async (req, res) => {
     },
     {
         content
-    })
+    },
+    {new: true}
+    )
 
     return res
         .status(201)
         .json(
-                new ApiResponse(201, updatedComment, "comment added successfully")
+                new ApiResponse(201, updatedComment, "comment updated successfully")
             )
 
 })
@@ -132,4 +137,4 @@ const deleteComment = asyncHandler(async (req, res) => {
             )
 })
 
-export { getVideoComments, addComment, updateComment, deleteComment }
+export { getComments, addComment, updateComment, deleteComment }
