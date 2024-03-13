@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandeler.js";
 import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
+import { User } from "../models/user.model.js";
 
 
 const getVideoByIdUtil = async (req) => {
@@ -218,11 +219,47 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
             )
 })
 
+const addViewCount = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+    if (!videoId) throw new ApiError(400, "videoId is required")
+
+    const watchHistoryUpdate = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $push: {
+                watchHistory: videoId
+            }
+        },
+        {new: true}
+    )
+
+    if(!watchHistoryUpdate) throw new ApiError(500, "video does not added to watchHistory successfully")
+
+    const video = await Video.findByIdAndUpdate(
+        videoId,
+        {
+            $inc: {
+                views: 1
+            }
+        },
+        {new: true}
+    )
+
+    if(!video) throw new ApiError(404, "video not found")
+
+    return res
+        .status(200)
+        .json(
+                new ApiResponse(200, video, "view count increased by 1 successfully")
+            )
+})
+
 export {
     publishVideo,
     getAllVideos,
     getVideoById,
     updateVideo,
     deleteVideo,
-    togglePublishStatus
+    togglePublishStatus,
+    addViewCount
 }
