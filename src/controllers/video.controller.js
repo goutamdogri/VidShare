@@ -13,7 +13,7 @@ const getVideoByIdUtil = async (req) => {
 
     const video = await Video.findById(videoId).exec()
 
-    if(!video) throw new ApiError(404, "video not find")
+    if (!video) throw new ApiError(404, "video not find")
 
     return video
 }
@@ -21,7 +21,7 @@ const getVideoByIdUtil = async (req) => {
 const publishVideo = asyncHandler(async (req, res) => {
     const { title, description } = req.body;
 
-    if([title, description].some((field) => field.trim() === "")) {
+    if ([title, description].some((field) => field.trim() === "")) {
         throw new ApiError(400, "Title and Description required");
     }
 
@@ -45,10 +45,10 @@ const publishVideo = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Error occurs while uploading video on cloud")
     }
     const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
-    if(!thumbnail) {
+    if (!thumbnail) {
         throw new ApiError(500, "Error occurs while uploading thumbnail on cloud")
     }
-    
+
     const video = await Video.create({
         title,
         description,
@@ -62,33 +62,33 @@ const publishVideo = asyncHandler(async (req, res) => {
     }
 
     return res
-            .status(200)
-            .json(
-                new ApiResponse(200, video, "video Published successfully")
-            )
+        .status(200)
+        .json(
+            new ApiResponse(200, video, "video Published successfully")
+        )
 
 })
 
 const getAllVideos = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, sortBy = "date", sortType = 1, userId, isPublished = true } = req.query
+    const { page = 1, limit = 10, sortBy = "date", sortType = 1, isPublished = true } = req.query
 
-    if(!userId) throw new ApiError(404, "userId is neccessary")
+    // if(!userId) throw new ApiError(404, "userId is neccessary")
 
     let sortingBy = sortBy.toLowerCase().trim() // 'date' or 'views' or 'title' or 'duration'
     let sortingType = Number(sortType) // 1 or -1
     let isPublishedStatus = isPublished.toLowerCase().trim() // 'true' or 'false' or 'all'
 
     if (sortingBy !== "date" && sortingBy !== "views" && sortingBy !== "title" && sortingBy !== "duration") throw new ApiError(404, "Invalid sortBy")
-    if(sortingType !== 1 && sortingType !== -1) throw new ApiError(404, "Invalid sorting Type")
-    if(isPublishedStatus !== "true" && isPublishedStatus !== "false" && isPublishedStatus !== 'all') throw new ApiError(400, "Invalid published Status")
+    if (sortingType !== 1 && sortingType !== -1) throw new ApiError(404, "Invalid sorting Type")
+    if (isPublishedStatus !== "true" && isPublishedStatus !== "false" && isPublishedStatus !== 'all') throw new ApiError(400, "Invalid published Status")
 
     if (sortingBy === "date") sortingBy = "createdAt";
 
     let myMatch = {
-        owner: new mongoose.Types.ObjectId(userId),
+        // owner: new mongoose.Types.ObjectId(userId),
     }
-    
-    if(isPublishedStatus !== 'all') {
+
+    if (isPublishedStatus !== 'all') {
         // isPublishedStatus = JSON.parse(isPublishedStatus)
         myMatch.isPublished = isPublishedStatus === 'true' // alternative way to assign truthy or falsy value. if isPublishedStatus = 'true' then "myMatch.isPublished: true" set as boolean value.
     }
@@ -96,6 +96,30 @@ const getAllVideos = asyncHandler(async (req, res) => {
     let myAggregate = Video.aggregate([
         {
             $match: myMatch
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "owner",
+                pipeline: [
+                    {
+                        $project: {
+                            fullName: 1,
+                            username: 1,
+                            avatar: 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $addFields: {
+                owner: {
+                    $first: "$owner"
+                }
+            }
         }
     ])
     let options = {
@@ -108,50 +132,50 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
     let videos;
     await Video.aggregatePaginate(myAggregate, options, (err, results) => {
-            if (err) {
-                throw new ApiError(500, err)
-            }
-
-            if (results) {
-                videos = results
-            }
+        if (err) {
+            throw new ApiError(500, err)
         }
+
+        if (results) {
+            videos = results
+        }
+    }
     )
 
     if (!videos) throw new ApiError(404, "Videos not found")
 
     return res
-            .status(200)
-            .json(
-                new ApiResponse(200, videos, "Videos fetched successfully")
-            )
+        .status(200)
+        .json(
+            new ApiResponse(200, videos, "Videos fetched successfully")
+        )
 })
 
 const getVideoById = asyncHandler(async (req, res) => {
     const video = await getVideoByIdUtil(req)
     return res
-            .status(200)
-            .json(
-                new ApiResponse (200, video, "video get successfully")
-            )
+        .status(200)
+        .json(
+            new ApiResponse(200, video, "video get successfully")
+        )
 })
 
 const updateVideo = asyncHandler(async (req, res) => {
     let { title, description } = req.body
     const video = await getVideoByIdUtil(req)
 
-    if(title === undefined) title = video.title
-    if(description === undefined) description = video.description
+    if (title === undefined) title = video.title
+    if (description === undefined) description = video.description
     title = title.trim()
     description = description.trim()
     if (title === video.title && description === video.description && !(req.file && req.file.path)) {
         throw new ApiError(400, "Please change title or description or thumbnail")
-    } else if((title === "" || description === "")) {
+    } else if ((title === "" || description === "")) {
         throw new ApiError(400, "title and description required")
     }
 
     let thumbnail = video.thumbnail;
-    if(req.file && req.file.path) {
+    if (req.file && req.file.path) {
         const thumbnailLocalPath = req.file.path
         thumbnail = await uploadOnCloudinary(thumbnailLocalPath)
         await deleteFromCloudinary(video.thumbnail)
@@ -164,59 +188,59 @@ const updateVideo = asyncHandler(async (req, res) => {
             description,
             thumbnail: thumbnail.secure_url
         },
-        {new: true}
+        { new: true }
     )
 
-    if(!updatedVideo) {
+    if (!updatedVideo) {
         throw new ApiError(500, "video not update successfully")
     }
 
     return res
-            .status(200)
-            .json(
-                new ApiResponse(200, updatedVideo, "video updated successfully")
-            )
+        .status(200)
+        .json(
+            new ApiResponse(200, updatedVideo, "video updated successfully")
+        )
 
 })
 
 const deleteVideo = asyncHandler(async (req, res) => {
     const video = await getVideoByIdUtil(req)
-    if(!video) throw new ApiError(404, "video not found")
+    if (!video) throw new ApiError(404, "video not found")
 
     await deleteFromCloudinary(video.videoFile)
     await deleteFromCloudinary(video.thumbnail)
 
     const deletedVideo = await Video.findByIdAndDelete(video._id)
-    if(!deletedVideo) {
+    if (!deletedVideo) {
         throw new ApiError(500, "video does not delete")
     }
 
     return res
-            .status(200)
-            .json(
-                new ApiResponse(200, deletedVideo, "video deleted successfully")
-            )
+        .status(200)
+        .json(
+            new ApiResponse(200, deletedVideo, "video deleted successfully")
+        )
 })
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
     const video = await getVideoByIdUtil(req)
-    if(!video) throw new ApiError(404, "video does not get")
+    if (!video) throw new ApiError(404, "video does not get")
 
     const toggledPublishVideo = await Video.findByIdAndUpdate(
         video._id,
         {
             isPublished: !video.isPublished
         },
-        {new: true}
+        { new: true }
     )
 
-    if(!toggledPublishVideo) throw new ApiError(500, "publish status does not toggled successfully")
+    if (!toggledPublishVideo) throw new ApiError(500, "publish status does not toggled successfully")
 
     return res
-            .status(200)
-            .json(
-                new ApiResponse(200, toggledPublishVideo, "publish status toggled successfully")
-            )
+        .status(200)
+        .json(
+            new ApiResponse(200, toggledPublishVideo, "publish status toggled successfully")
+        )
 })
 
 const addViewCount = asyncHandler(async (req, res) => {
@@ -230,10 +254,10 @@ const addViewCount = asyncHandler(async (req, res) => {
                 watchHistory: videoId
             }
         },
-        {new: true}
+        { new: true }
     )
 
-    if(!watchHistoryUpdate) throw new ApiError(500, "video does not added to watchHistory successfully")
+    if (!watchHistoryUpdate) throw new ApiError(500, "video does not added to watchHistory successfully")
 
     const video = await Video.findByIdAndUpdate(
         videoId,
@@ -242,16 +266,16 @@ const addViewCount = asyncHandler(async (req, res) => {
                 views: 1
             }
         },
-        {new: true}
+        { new: true }
     )
 
-    if(!video) throw new ApiError(404, "video not found")
+    if (!video) throw new ApiError(404, "video not found")
 
     return res
         .status(200)
         .json(
-                new ApiResponse(200, video, "view count increased by 1 successfully")
-            )
+            new ApiResponse(200, video, "view count increased by 1 successfully")
+        )
 })
 
 export {
