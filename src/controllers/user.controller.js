@@ -1,10 +1,14 @@
 import { asyncHandler } from "../utils/asyncHandeler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+    deleteFromCloudinary,
+    uploadOnCloudinary,
+} from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import { mongoose } from "mongoose";
+import fs from "fs";
 
 const generateAccessAndRefereshTokens = async (userId) => {
     try {
@@ -34,24 +38,16 @@ const registerUser = asyncHandler(async (req, res) => {
     // check for user creation
     // return res
     const { fullName, email, username, password } = req.body; // yeh form data parse multer middleware karke bheja hai.
-    if (
-        [fullName, email, username, password].some((field) => field?.trim() === "")
-    ) {
-        throw new ApiError(400, "All fields are required");
-    }
-
-    const existedUser = await User.findOne({
-        $or: [{ username }, { email }],
-    });
-    if (existedUser) {
-        throw new ApiError(409, "user with email or username already exists");
-    }
 
     // ".files" ka access multer middleware ne diya hai. name mai avatar diya hai isiliye ".avatar".
 
     let avatarLocalPath;
-    if (req.files && Array.isArray(req.files.avatar) && req.files.avatar.length > 0) {
-        avatarLocalPath = req.files.avatar[0].path
+    if (
+        req.files &&
+        Array.isArray(req.files.avatar) &&
+        req.files.avatar.length > 0
+    ) {
+        avatarLocalPath = req.files.avatar[0].path;
     }
 
     // const avatarLocalPath = req.files?.avatar[0]?.path; // file path mil jayega jo humare server pe multer nai upload kiya hai. and yeh data humne return karaya hai multer function likhte time. "?" cannot understand it's behaviour
@@ -67,14 +63,35 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     if (!avatarLocalPath) {
+        deleteLocalFile(coverImageLocalPath);
         throw new ApiError(400, "Avatar file is required");
+    }
+
+    async function deleteLocalFile(avatar, coverImage) {
+        if (avatar) fs.unlinkSync(avatar);
+        if (coverImage) fs.unlinkSync(coverImage);
+    }
+
+    if (
+        [fullName, email, username, password].some((field) => field?.trim() === "")
+    ) {
+        deleteLocalFile(avatarLocalPath, coverImageLocalPath);
+        throw new ApiError(400, "All fields are required");
+    }
+
+    const existedUser = await User.findOne({
+        $or: [{ username }, { email }],
+    });
+    if (existedUser) {
+        deleteLocalFile(avatarLocalPath, coverImageLocalPath);
+        throw new ApiError(409, "user with email or username already exists");
     }
 
     const avatar = await uploadOnCloudinary(avatarLocalPath);
     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
     if (!avatar) {
-        throw new ApiError(400, "Avatar file is required");
+        throw new ApiError(500, "avatar cloud url does not get");
     }
 
     const user = await User.create({
@@ -94,9 +111,29 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Something went wrong while registering the user");
     }
 
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
+        user._id
+    );
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+    };
     return res
         .status(201)
-        .json(new ApiResponse(200, createduser, "User registered Successfully"));
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: createduser,
+                    accessToken,
+                    refreshToken,
+                },
+                "User registered Successfully"
+            )
+        );
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -128,7 +165,9 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Invalid user credential");
     }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id);
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
+        user._id
+    );
 
     // send token to secure cookie
     const loggedInUser = await User.findById(user._id).select(
@@ -193,9 +232,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             incomingRefreshToken,
             process.env.REFRESH_TOKEN_SECRET
         );
-        const user = await User.findById(decodedToken?._id).select(
-            "-password"
-        );
+        const user = await User.findById(decodedToken?._id).select("-password");
 
         if (!user) {
             throw new ApiError(401, "Invalid refresh token");
@@ -253,8 +290,8 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
     return res
         .status(200)
-        .json(new ApiResponse(200, req.user, "current user fetched successfully"))
-})
+        .json(new ApiResponse(200, req.user, "current user fetched successfully"));
+});
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
     const { fullName, email } = req.body;
@@ -271,12 +308,12 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
             },
         },
         { new: true }
-    ).select("-password -refreshToken")
+    ).select("-password -refreshToken");
 
     return res
         .status(200)
-        .json(new ApiResponse(200, user, "Account details updated successfully"))
-})
+        .json(new ApiResponse(200, user, "Account details updated successfully"));
+});
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
     const avatarLocalPath = req.file?.path; // file path mil jayega jo humare server pe multer nai upload kiya hai. and yeh data humne return karaya hai multer function likhte time.
@@ -291,7 +328,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Error while uploading on avatar");
     }
 
-    await deleteFromCloudinary(req.user?.avatar)
+    await deleteFromCloudinary(req.user?.avatar);
 
     const user = await User.findByIdAndUpdate(
         req.user?._id,
@@ -301,15 +338,12 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
             },
         },
         { new: true } // so that findByIdAndUpdate returns the document after update
-    ).select("-password -refreshToken")
+    ).select("-password -refreshToken");
 
     return res
         .status(200)
-        .json(
-            new ApiResponse(200, user, "Avatar updated successfully")
-        )
-
-})
+        .json(new ApiResponse(200, user, "Avatar updated successfully"));
+});
 
 const updateUserCoverImage = asyncHandler(async (req, res) => {
     const coverImageLocalPath = req.file?.path; // file path mil jayega jo humare server pe multer nai upload kiya hai. and yeh data humne return karaya hai multer function likhte time.
@@ -324,7 +358,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Error while uploading on cover Image");
     }
 
-    await deleteFromCloudinary(req.user?.coverImage)
+    await deleteFromCloudinary(req.user?.coverImage);
 
     const user = await User.findByIdAndUpdate(
         req.user?._id,
@@ -334,17 +368,15 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
             },
         },
         { new: true }
-    ).select("-password -refreshToken")
+    ).select("-password -refreshToken");
 
     return res
         .status(200)
-        .json(
-            new ApiResponse(200, user, "Cover Image updated successfully")
-        )
-})
+        .json(new ApiResponse(200, user, "Cover Image updated successfully"));
+});
 
 const getUserChannelProfile = asyncHandler(async (req, res) => {
-    const { username } = req.params
+    const { username } = req.params;
 
     if (!username) {
         throw new ApiError(400, "username is required");
@@ -353,39 +385,39 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     const channel = await User.aggregate([
         {
             $match: {
-                username: username?.toLowerCase()
-            }
+                username: username?.toLowerCase(),
+            },
         },
         {
             $lookup: {
                 from: "subscriptions",
                 localField: "_id",
                 foreignField: "channel",
-                as: "subscribers"
-            }
+                as: "subscribers",
+            },
         },
         {
             $lookup: {
                 from: "subscriptions",
                 localField: "_id",
                 foreignField: "subscriber",
-                as: "subscribedTo"
-            }
+                as: "subscribedTo",
+            },
         },
         {
             $addFields: {
                 subscribersCount: {
-                    $size: "$subscribers"
+                    $size: "$subscribers",
                 },
                 ckannelSubscribedToCount: {
-                    $size: "$subscribedTo"
+                    $size: "$subscribedTo",
                 },
                 isSubscribed: {
                     if: { $in: [req.user?._id, "$subscribers.subscriber"] },
                     then: true,
-                    else: false
-                }
-            }
+                    else: false,
+                },
+            },
         },
         {
             $project: {
@@ -396,10 +428,10 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 coverImage: 1,
                 subscribersCount: 1,
                 ckannelSubscribedToCount: 1,
-                isSubscribed: 1
-            }
-        }
-    ])
+                isSubscribed: 1,
+            },
+        },
+    ]);
 
     if (!channel?.length) {
         throw new ApiError(404, "Channel does not exists");
@@ -407,15 +439,15 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, channel[0], "Channel fetched successfully"))
-})
+        .json(new ApiResponse(200, channel[0], "Channel fetched successfully"));
+});
 
 const getWatchHistory = asyncHandler(async (req, res) => {
     const user = await User.aggregate([
         {
             $match: {
-                _id: new mongoose.Types.ObjectId(req.user._id) // req.user_id yeh ak string deta hai jo ki mongodb id nahi hai. see an mongodb id, unhape parenthesis ke andar jo string hai ohi req.user._id deta hai. mongoose behind the scene issko mongodb id mai convert kar deta hai. lekin aggregate ke andar aisa nahi hota, code directly jata hai, issiliye code ko mongodb id mai convert karneke liye yeh code likha gaya hai.
-            }
+                _id: new mongoose.Types.ObjectId(req.user._id), // req.user_id yeh ak string deta hai jo ki mongodb id nahi hai. see an mongodb id, unhape parenthesis ke andar jo string hai ohi req.user._id deta hai. mongoose behind the scene issko mongodb id mai convert kar deta hai. lekin aggregate ke andar aisa nahi hota, code directly jata hai, issiliye code ko mongodb id mai convert karneke liye yeh code likha gaya hai.
+            },
         },
         {
             $lookup: {
@@ -423,40 +455,60 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                 localField: "watchHistory",
                 foreignField: "_id",
                 as: "watchHistory",
-                pipeline: [ // ab hum videos ke andar pounch gaye hai
+                pipeline: [
+                    // ab hum videos ke andar pounch gaye hai
                     {
                         $lookup: {
                             from: "users",
                             localField: "owner",
                             foreignField: "_id",
                             as: "owner",
-                            pipeline: [ // ab hum nested wala owner ke andar pounch gaya
+                            pipeline: [
+                                // ab hum nested wala owner ke andar pounch gaya
                                 {
-                                    $project: { // nested wala owner ka field select kar rahe hai
+                                    $project: {
+                                        // nested wala owner ka field select kar rahe hai
                                         username: 1,
                                         fullName: 1,
                                         avatar: 1,
-                                    }
-                                }
-                            ]
-                        }
+                                    },
+                                },
+                            ],
+                        },
                     },
                     {
                         $addFields: {
                             owner: {
-                                $first: "$owner"
-                            }
-                        }
-                    }
-                ]
-            }
-        }
-
-    ])
+                                $first: "$owner",
+                            },
+                        },
+                    },
+                ],
+            },
+        },
+    ]);
 
     return res
-    .status(200)
-    .json(new ApiResponse(200, user[0].getWatchHistory, "Watck History fetched Successfully"))
-})
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                user[0].getWatchHistory,
+                "Watck History fetched Successfully"
+            )
+        );
+});
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage, getUserChannelProfile, getWatchHistory };
+export {
+    registerUser,
+    loginUser,
+    logoutUser,
+    refreshAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateAccountDetails,
+    updateUserAvatar,
+    updateUserCoverImage,
+    getUserChannelProfile,
+    getWatchHistory,
+};

@@ -10,6 +10,13 @@ app.use(cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true
 }))
+
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+});
 // hum json ko accept karenge as response uske liye yeh configuration jaroori hai. json file 16kb ke andar hona chahiye tabhi accept karenge.
 app.use(express.json({limit: "16kb"}))
 // url ka data ko lene ke liye configuration. extended true karne se - object ke andar object de pate ho.
