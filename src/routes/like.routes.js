@@ -1,13 +1,16 @@
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js"
-import { getLikedVideos, toggleCommentLike, toggleCommunityPostLike, toggleVideoLike } from "../controllers/like.controller.js";
+import { getCommentLikesCount, getCommunityPostLikesCount, getLikedVideos, getVideoLikesCount, checkOrToggleCommentLike, checkOrToggleCommunityPostLike, checkOrToggleVideoLike } from "../controllers/like.controller.js";
 
 const router = Router()
 router.use(verifyJWT)
 
-router.route('/toggle/video/:videoId').post(toggleVideoLike)
-router.route('/toggle/comment/:commentId').post(toggleCommentLike)
-router.route('/toggle/post/:communityPostId').post(toggleCommunityPostLike)
+router.route('/check/toggle/video/:videoId').post(checkOrToggleVideoLike)
+router.route('/check/toggle/comment/:commentId').post(checkOrToggleCommentLike)
+router.route('/check/toggle/post/:communityPostId').post(checkOrToggleCommunityPostLike)
 router.route('/videos').get(getLikedVideos)
+router.route('/video/:videoId').get(getVideoLikesCount)
+router.route('/comment/:commentId').get(getCommentLikesCount)
+router.route('/communityPost/:communityPostId').get(getCommunityPostLikesCount)
 
 export default router

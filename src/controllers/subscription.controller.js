@@ -6,10 +6,37 @@ import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandeler.js"
 
 
-const toggleSubscription = asyncHandler(async (req, res) => {
+const checkOrToggleSubscription = asyncHandler(async (req, res) => {
     const {channelId} = req.params
     if(!channelId) throw new ApiError(400, "channel Id is required")
+    const { need } = req.query
+	const work = need?.trim().toLowerCase()
+	if (work !== 'check' && work !== 'toggle') {
+		throw new ApiError(400, "need must be either 'check' or 'toggle'")
+	}
 
+    if (work == 'check') {
+		const subscribedChannel = await Subscription.findOne({
+			subscriber: req.user._id,
+            channel: channelId
+		})
+
+		if (subscribedChannel) {
+			return res
+				.status(200)
+				.json(
+					new ApiResponse(200, {subscriptionStatus: true}, "Channel already subscribed by the user")
+				)
+		} else {
+			return res
+				.status(200)
+				.json(
+					new ApiResponse(200, {subscriptionStatus: false}, "Channel does not Subscribed by the user")
+				)
+		}
+	}
+
+	if (work == 'toggle') {
     const subscribedChannel = await Subscription.findOneAndDelete({
         subscriber: req.user._id,
         channel: channelId
@@ -24,17 +51,17 @@ const toggleSubscription = asyncHandler(async (req, res) => {
         return res
             .status(200)
             .json(
-                new ApiResponse(200, newSubscription, "new subscription added successfully")
+                new ApiResponse(200, { subscription: newSubscription, subscriptionStatus: true }, "new subscription added successfully")
             )
     }
 
     return res
         .status(200)
         .json(
-            new ApiResponse(200, subscribedChannel, "subscription removed successfully")
+            new ApiResponse(200, { subscription: subscribedChannel, subscriptionStatus: false }, "subscription removed successfully")
         )
+    }
 })
-
 
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     const {channelId} = req.params
@@ -93,7 +120,6 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     })
 })
 
-
 const getSubscribedChannels = asyncHandler(async (req, res) => {
     const { subscriberId } = req.params
     if(!subscriberId) throw new ApiError(400, "subscriber Id is required")
@@ -137,8 +163,38 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
         )
 })
 
+const getSubscriberCount = asyncHandler(async (req, res) => {
+    const { channelId } = req.params
+    if (!channelId) throw new ApiError(400, "channelId is required")
+
+    let totalSubs = await Subscription.aggregate([
+        {
+            $match: {
+                channel: new mongoose.Types.ObjectId(channelId)
+            }
+        },
+        {
+            $count: "subscribersCount"
+        }
+    ])
+    if (totalSubs[0] === undefined) {
+        totalSubs = [
+            {
+                subscribersCount: 0
+            }
+        ]
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, totalSubs[0], "subscriber count fetched successfully")
+        )
+})
+
 export {
-    toggleSubscription,
+    checkOrToggleSubscription,
     getUserChannelSubscribers,
-    getSubscribedChannels
+    getSubscribedChannels,
+    getSubscriberCount
 }

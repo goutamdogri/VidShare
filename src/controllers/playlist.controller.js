@@ -3,7 +3,7 @@ import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { Playlist } from "../models/playlist.model.js";
 import { Video } from "../models/video.model.js";
-
+import { mongoose } from "mongoose";
 
 const createPlaylist = asyncHandler(async (req, res) => {
     let { name, description } = req.body;
@@ -32,7 +32,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
     if(!userId) throw new ApiError(400, "userId is necessary")
 
     const playlists = await Playlist.find({
-        owner: userId
+        owner: new mongoose.Types.ObjectId(userId)
     })
 
     if(!playlists) throw new ApiError(400, "playlist does not found")
