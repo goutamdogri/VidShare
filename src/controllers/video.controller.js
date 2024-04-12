@@ -278,6 +278,7 @@ const addViewCount = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     if (!videoId) throw new ApiError(400, "videoId is required")
 
+    // NOTE: video added to watchhistoryarray continuously multiple time. we need to add video once if continuous. and we can remove video from past history if user watch that video again thereafter.
     const watchHistoryUpdate = await User.findByIdAndUpdate(
         req.user._id,
         {
