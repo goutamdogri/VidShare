@@ -167,8 +167,8 @@ const getChannelStats = asyncHandler(async (req, res) => {
 
 const getChannelVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, sortBy = "date", sortType = 1, isPublished = true } = req.query
-    const { chanelId } = req.params
-    if (!chanelId) throw new ApiError(404, "chanelId is neccessary")
+    const { channelId } = req.params
+    if (!channelId) throw new ApiError(404, "channelId is neccessary")
 
     let sortingBy = sortBy.toLowerCase().trim() // 'date' or 'views' or 'title' or 'duration'
     let sortingType = Number(sortType) // 1 or -1
@@ -181,7 +181,7 @@ const getChannelVideos = asyncHandler(async (req, res) => {
     if (sortingBy === "date") sortingBy = "createdAt";
 
     let myMatch = {
-        owner: new mongoose.Types.ObjectId(chanelId),
+        owner: new mongoose.Types.ObjectId(channelId),
     }
 
     if (isPublishedStatus !== 'all') {

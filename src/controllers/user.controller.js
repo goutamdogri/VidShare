@@ -376,16 +376,16 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 });
 
 const getUserChannelProfile = asyncHandler(async (req, res) => {
-    const { username } = req.params;
+    const { channelId } = req.params;
 
-    if (!username) {
-        throw new ApiError(400, "username is required");
+    if (!channelId) {
+        throw new ApiError(400, "channelId is required");
     }
 
     const channel = await User.aggregate([
         {
             $match: {
-                username: username?.toLowerCase(),
+                _id: new mongoose.Types.ObjectId(channelId),
             },
         },
         {
@@ -409,7 +409,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 subscribersCount: {
                     $size: "$subscribers",
                 },
-                ckannelSubscribedToCount: {
+                channelSubscribedToCount: {
                     $size: "$subscribedTo",
                 },
                 isSubscribed: {
@@ -427,7 +427,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 avatar: 1,
                 coverImage: 1,
                 subscribersCount: 1,
-                ckannelSubscribedToCount: 1,
+                channelSubscribedToCount: 1,
                 isSubscribed: 1,
             },
         },
