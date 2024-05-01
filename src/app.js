@@ -31,6 +31,7 @@ import communityRouter from './routes/communityPost.routes.js'
 import subscriptionRouter from './routes/subscription.routes.js'
 import dashboardRouter from './routes/dashboard.routes.js'
 import healthcheckRouter from './routes/healthcheck.routes.js'
+import previewRouter from "./routes/preview.routes.js";
 
 // routes declaration
 app.use('/api/v1/users', userRouter) //middleware use is must. "/api/v1/user" pe control userRouter pe chala jayega. "/api/v1/users" is prefix and userRouter's url is come after that. '/api/v1/users/register'. api and uska version as a route likhna standard practice hai. 
@@ -43,6 +44,7 @@ app.use('/api/v1/community', communityRouter)
 app.use('/api/v1/subscriptions', subscriptionRouter)
 app.use('/api/v1/dashboard', dashboardRouter)
 app.use('/api/v1/healthcheck', healthcheckRouter)
+app.use('/api/v1/preview', previewRouter)
 
 // TEST routes
 import routerForTest from './TEST/routesForTest.test.js'

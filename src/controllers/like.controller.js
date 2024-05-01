@@ -105,14 +105,14 @@ const checkOrToggleCommentLike = asyncHandler(async (req, res) => {
 			return res
 				.status(200)
 				.json(
-					new ApiResponse(200, newLike, "Comment liked successfully")
+					new ApiResponse(200, {like: newLike, currLikeStatus: true}, "Comment liked successfully")
 				)
 		}
 
 		return res
 			.status(200)
 			.json(
-				new ApiResponse(200, likedComment, "Comment unliked successfully")
+				new ApiResponse(200, {like: likedComment, currLikeStatus: false}, "Comment unliked successfully")
 			)
 	}
 })
@@ -161,23 +161,46 @@ const checkOrToggleCommunityPostLike = asyncHandler(async (req, res) => {
 			return res
 				.status(200)
 				.json(
-					new ApiResponse(200, newLike, "Community Post liked successfully")
+					new ApiResponse(200, {like: newLike, currLikeStatus: true}, "Community Post liked successfully")
 				)
 		}
 
 		return res
 			.status(200)
 			.json(
-				new ApiResponse(200, likedCommunityPost, "Community Post unliked successfully")
+				new ApiResponse(200, {like: likedCommunityPost, currLikeStatus: false}, "Community Post unliked successfully")
 			)
 	}
 })
 
 const getLikedVideos = asyncHandler(async (req, res) => {
-	const likedVideos = await Like.aggregate([
+	
+	const {
+    page = 1,
+    limit = 10,
+    sortBy = "date",
+    sortType = 1,
+  } = req.query;
+
+	let sortingBy = sortBy.toLowerCase().trim(); // 'date' or 'views' or 'title' or 'duration'
+  let sortingType = Number(sortType);
+
+  if (
+    sortingBy !== "date" &&
+    sortingBy !== "views" &&
+    sortingBy !== "title" &&
+    sortingBy !== "duration"
+  )
+    throw new ApiError(404, "Invalid sortBy");
+  if (sortingType !== 1 && sortingType !== -1)
+    throw new ApiError(404, "Invalid sorting Type");
+
+		if (sortingBy === "date") sortingBy = "createdAt";
+
+		const myAggregate = Like.aggregate([
 		{
 			$match: {
-				likedBy: req.user._id,
+				likedBy: new mongoose.Types.ObjectId(req.user._id),
 				video: { $exists: true }
 			}
 		},
@@ -227,14 +250,28 @@ const getLikedVideos = asyncHandler(async (req, res) => {
 				"video.isPublished": true
 			}
 		},
-		{
-			$sort: {
-				createdAt: 1
-			}
-		}
 	])
 
-	if (!likedVideos) throw new ApiError(500, "liked videos not found, either user does not like any video yet or error occurs while finding liked videos")
+	let options = {
+    page,
+    limit,
+    sort: {
+      [sortingBy]: sortingType,
+    },
+  };
+
+	let likedVideos;
+  await Like.aggregatePaginate(myAggregate, options, (err, results) => {
+    if (err) {
+      throw new ApiError(500, err);
+    }
+
+    if (results) {
+      likedVideos = results;
+    }
+  });
+
+	
 
 	return res
 		.status(200)
