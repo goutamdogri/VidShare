@@ -84,7 +84,7 @@ const addComment = asyncHandler(async (req, res) => {
     const comment = await Comment.create({
         [videoORcommunityPost]: videoIdOrCommunityPostId,
         owner: req.user._id,
-        content
+        content: content.trim().substring(0, 250),
     })
 
     return res
@@ -107,7 +107,7 @@ const updateComment = asyncHandler(async (req, res) => {
         owner: req.user._id
     },
     {
-        content
+        content: content.trim().substring(0, 250),
     },
     {new: true}
     )

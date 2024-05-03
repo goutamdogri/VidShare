@@ -10,7 +10,7 @@ const createCommunityPost = asyncHandler(async (req, res) => {
     if(content === undefined || content.trim() === "") throw new ApiError(404, "content can't be empty")
 
     const communityPost = await CommunityPost.create({
-        content,
+        content: content.trim().substring(0, 500),
         owner: req.user._id
     })
 
@@ -100,7 +100,7 @@ const updateCommunityPost = asyncHandler(async (req, res) => {
         owner: req.user._id
     },
     {
-        content
+        content: content.trim().substring(0, 500),
     },
     {new: true}
     )

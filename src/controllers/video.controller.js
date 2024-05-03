@@ -92,8 +92,8 @@ const publishVideo = asyncHandler(async (req, res) => {
   }
 
   const video = await Video.create({
-    title,
-    description,
+    title: title.trim().substring(0, 100),
+    description: description.trim().substring(0, 1000),
     videoFile: videoFile.secure_url,
     thumbnail: thumbnail.secure_url,
     duration: videoFile.duration,
@@ -246,7 +246,7 @@ const updateVideo = asyncHandler(async (req, res) => {
       const thumbnail = data;
       const updatedVideo = await Video.findByIdAndUpdate(
         videoId,
-        { title, description, thumbnail },
+        { title: title.trim().substring(0, 100), description: description.trim().substring(0, 1000), thumbnail },
         { new: true }
       );
 
