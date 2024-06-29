@@ -7,7 +7,7 @@ const app = express();
 //configurations
 // app.use this method is use for middleware and for configuration purpose. inhape hum cors ko configure karenge kon kon port allowed hai yeh sab
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: [process.env.CORS_ORIGIN, process.env.SEC_CORS_ORIGIN],
     credentials: true
 }))
 
