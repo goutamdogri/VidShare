@@ -27,6 +27,25 @@ const generateAccessAndRefereshTokens = async (userId) => {
   }
 };
 
+async function getUsername(){
+  const usernameOptions =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let username;
+  let f = true;
+  while (f) {
+    username = "";
+    for (let index = 0; index < 10; index++) {
+      username +=
+        usernameOptions[Math.floor(Math.random() * usernameOptions.length)];
+    }
+    const existedUsername = await User.findOne({ username });
+    if (!existedUsername) {
+      f = false;
+    }
+  }
+  return username;
+}
+
 const registerUser = asyncHandler(async (req, res) => {
   // get user details from frontend
   // validation - iske liye bade company me ak alak file hote hai
@@ -37,7 +56,7 @@ const registerUser = asyncHandler(async (req, res) => {
   // remove password and refresh token field from response
   // check for user creation
   // return res
-  const { fullName, email, username, password } = req.body; // yeh form data parse multer middleware karke bheja hai.
+  const { fullName, email, password } = req.body; // yeh form data parse multer middleware karke bheja hai.
 
   // ".files" ka access multer middleware ne diya hai. name mai avatar diya hai isiliye ".avatar".
 
@@ -72,16 +91,12 @@ const registerUser = asyncHandler(async (req, res) => {
     if (coverImage) fs.unlinkSync(coverImage);
   }
 
-  if (
-    [fullName, email, username, password].some((field) => field?.trim() === "")
-  ) {
+  if ([fullName, email, password].some((field) => field?.trim() === "")) {
     deleteLocalFile(avatarLocalPath, coverImageLocalPath);
     throw new ApiError(400, "All fields are required");
   }
 
-  const existedUser = await User.findOne({
-    $or: [{ username }, { email }],
-  });
+  const existedUser = await User.findOne({ email });
   if (existedUser) {
     deleteLocalFile(avatarLocalPath, coverImageLocalPath);
     throw new ApiError(409, "user with email or username already exists");
@@ -94,14 +109,20 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "avatar cloud url does not get");
   }
 
+  const username = getUsername();
+
   const user = await User.create({
     fullName, // fullName: fullName
     avatar: avatar.secure_url,
     coverImage: coverImage?.secure_url || "",
     email,
     password,
-    username: username.toLowerCase(),
+    username,
   });
+
+  const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
+    user._id
+  );
 
   const createduser = await User.findById(user._id).select(
     "-password -refreshToken" // syntax hi aisa hai. iske andar jo field name rahega usko chodke sara select ho jayega
@@ -110,10 +131,6 @@ const registerUser = asyncHandler(async (req, res) => {
   if (!createduser) {
     throw new ApiError(500, "Something went wrong while registering the user");
   }
-
-  const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
-    user._id
-  );
 
   const options = {
     httpOnly: true,
@@ -526,6 +543,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
 });
 
 export {
+  generateAccessAndRefereshTokens,
   registerUser,
   loginUser,
   logoutUser,
@@ -537,4 +555,5 @@ export {
   updateUserCoverImage,
   getUserChannelProfile,
   getWatchHistory,
+  getUsername
 };

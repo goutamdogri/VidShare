@@ -8,7 +8,6 @@ const userSchema = new Schema({
         type: String,
         required: true,
         unique: true,
-        lowercase: true,
         trim: true,
         index: true // yeh data field ko searchable banata hai optimized tarike se. but toda expensive hoga yeh. 
     },

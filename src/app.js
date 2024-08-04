@@ -33,6 +33,7 @@ import dashboardRouter from './routes/dashboard.routes.js'
 import healthcheckRouter from './routes/healthcheck.routes.js'
 import previewRouter from "./routes/preview.routes.js";
 import feedbackRouter from "./routes/feedback.routes.js"
+import oauthRouter from "./routes/oauth.routes.js"
 
 // routes declaration
 app.use('/api/v1/users', userRouter) //middleware use is must. "/api/v1/user" pe control userRouter pe chala jayega. "/api/v1/users" is prefix and userRouter's url is come after that. '/api/v1/users/register'. api and uska version as a route likhna standard practice hai. 
@@ -47,6 +48,7 @@ app.use('/api/v1/dashboard', dashboardRouter)
 app.use('/api/v1/healthcheck', healthcheckRouter)
 app.use('/api/v1/preview', previewRouter)
 app.use('/api/v1/feedback', feedbackRouter)
+app.use('/api/v1/oauth', oauthRouter)
 
 // TEST routes
 import routerForTest from './TEST/routesForTest.test.js'
