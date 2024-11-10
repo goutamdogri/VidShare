@@ -9,7 +9,7 @@ const userSchema = new Schema({
         required: true,
         unique: true,
         trim: true,
-        index: true // yeh data field ko searchable banata hai optimized tarike se. but toda expensive hoga yeh. 
+        index: true 
     },
     email: {
         type: String,
@@ -51,7 +51,6 @@ const userSchema = new Schema({
 
 }, { timestamps: true })
 
-// "pre" is a hook middleware exists in mongoose. "save" event ka just pahle yeh code run hoga. idhar fat arrow function mat use karna qki uske andar "this" ka context nahi pata hota.
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10)
@@ -59,16 +58,14 @@ userSchema.pre("save", async function (next) {
 })
 
 
-// "method" userSchema ke andar ak object hai. usme hum property add kar rahe hai "isPasswordCorrect" name se. jisme value ak method hai
 userSchema.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.password)
 }
 
-// inhape hum access token generate kar rahe hai 
 userSchema.methods.generateAccessToken = function () {
-    return jwt.sign( // access token return karega
-        { // paylod
-            _id: this._id, //database ka access hoga iske paas udhar se le lega
+    return jwt.sign( 
+        { 
+            _id: this._id,
             email: this.email,
             username: this.username,
             fullName: this.fullName
@@ -80,11 +77,10 @@ userSchema.methods.generateAccessToken = function () {
     )
 }
 
-// inhape hum refresh token generate kar rahe hai. token making process same hota hai. inhape hum sirf payload kam dete hai
 userSchema.methods.generateRefreshToken = function () {
-    return jwt.sign( // access token return karega
-        { // paylod
-            _id: this._id, //database ka access hoga iske paas udhar se le lega
+    return jwt.sign( 
+        { 
+            _id: this._id, 
         },
         process.env.REFRESH_TOKEN_SECRET,
         {

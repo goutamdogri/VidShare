@@ -169,7 +169,6 @@ const updatePlaylist = asyncHandler(async (req, res) => {
       updateField.name = name.trim();
     }
   }
-  console.log(updateField);
 
   const playlist = await Playlist.findOneAndUpdate(
     {

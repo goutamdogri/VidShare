@@ -47,18 +47,7 @@ async function getUsername(){
 }
 
 const registerUser = asyncHandler(async (req, res) => {
-  // get user details from frontend
-  // validation - iske liye bade company me ak alak file hote hai
-  // check if user already exists: username, email
-  // check for images, check for avatar
-  // upload them to cloudinary, avatar
-  // create user object - create entry in db
-  // remove password and refresh token field from response
-  // check for user creation
-  // return res
-  const { fullName, email, password } = req.body; // yeh form data parse multer middleware karke bheja hai.
-
-  // ".files" ka access multer middleware ne diya hai. name mai avatar diya hai isiliye ".avatar".
+  const { fullName, email, password } = req.body;
 
   let avatarLocalPath;
   if (
@@ -109,7 +98,7 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "avatar cloud url does not get");
   }
 
-  const username = getUsername();
+  const username = await getUsername();
 
   const user = await User.create({
     fullName, // fullName: fullName
@@ -125,7 +114,7 @@ const registerUser = asyncHandler(async (req, res) => {
   );
 
   const createduser = await User.findById(user._id).select(
-    "-password -refreshToken" // syntax hi aisa hai. iske andar jo field name rahega usko chodke sara select ho jayega
+    "-password -refreshToken"
   );
 
   if (!createduser) {
@@ -155,18 +144,9 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-  // req body -> data
-  // username or email
-  // find the user
-  // password check
-  // access and referesh token
-  // send token to secure cookie
-
   const { email, username, password } = req.body;
-  // console.log(email);
 
   if (!username && !email) {
-    //alternative (!(username || email))
     throw new ApiError(400, "username or email is required");
   }
 
@@ -187,7 +167,6 @@ const loginUser = asyncHandler(async (req, res) => {
     user._id
   );
 
-  // send token to secure cookie
   const loggedInUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
